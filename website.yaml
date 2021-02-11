@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: website
+  template:
+    metadata:
+      labels:
+        app: website
+    spec:
+      containers:
+      - name: git
+        image: imroc.tencentcloudcr.com/library/git:latest
+        command:
+        - /git-sync.sh
+        volumeMounts:
+        - mountPath: /git-sync.sh
+          name: sh
+          subPath: git-sync.sh
+        - mountPath: /var/www
+          name: www
+      - name: website
+        image: imroc.tencentcloudcr.com/library/nginx:latest
+        env:
+        - name: NGINX_WATCH_PATHS
+          value: "/etc/nginx/ssl/"
+        volumeMounts:
+        - mountPath: /etc/nginx/nginx.conf
+          name: conf
+          subPath: nginx.conf
+        - mountPath: /var/www
+          name: www
+        - mountPath: /etc/nginx/ssl
+          name: cert
+      volumes:
+      - name: conf
+        configMap:
+          name: website-nginx-conf
+      - name: sh
+        configMap:
+          name: git-sync-sh
+          defaultMode: 0777
+      - name: cert
+        secret:
+          secretName: imroc-crt-secret
+      - name: www
+        emptyDir: {}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: website
+  annotations:
+    service.kubernetes.io/tke-existed-lbid: "lb-qftuf8a2"
+  labels:
+    app: website
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    app: website
+
