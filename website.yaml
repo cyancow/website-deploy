@@ -7,16 +7,35 @@ spec:
   selector:
     matchLabels:
       app: website
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
         app: website
     spec:
-      containers:
-      - name: git
+      initContainers:
+      - name: clone
         image: imroc.tencentcloudcr.com/library/git:latest
+        imagePullPolicy: Always
         command:
         - /git-sync.sh
+        - clone
+        volumeMounts:
+        - mountPath: /git-sync.sh
+          name: sh
+          subPath: git-sync.sh
+        - mountPath: /var/www
+          name: www
+      containers:
+      - name: sync
+        image: imroc.tencentcloudcr.com/library/git:latest
+        imagePullPolicy: Always
+        command:
+        - /git-sync.sh
+        - sync
         volumeMounts:
         - mountPath: /git-sync.sh
           name: sh
@@ -25,16 +44,17 @@ spec:
           name: www
       - name: website
         image: imroc.tencentcloudcr.com/library/nginx:latest
+        imagePullPolicy: Always
         env:
         - name: NGINX_WATCH_PATHS
-          value: "/etc/nginx/ssl/"
+          value: "/ssl/"
         volumeMounts:
         - mountPath: /etc/nginx/nginx.conf
           name: conf
           subPath: nginx.conf
         - mountPath: /var/www
           name: www
-        - mountPath: /etc/nginx/ssl
+        - mountPath: /ssl
           name: cert
       volumes:
       - name: conf

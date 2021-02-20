@@ -11,3 +11,4 @@ spec:
     group: cert-manager.io
   dnsNames:
   - imroc.io
+  - cyd.imroc.io

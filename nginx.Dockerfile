@@ -1,7 +1,7 @@
 FROM nginx:latest
 
-
 RUN apt-get update && apt-get install -y inotify-tools bash dumb-init
+RUN cp -r /etc/nginx /lib/nginx
 
 ENTRYPOINT ["dumb-init", "--"]
 

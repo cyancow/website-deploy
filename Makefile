@@ -15,4 +15,4 @@ gitimage:
 
 .PHONY: nginximage
 nginximage:
-	docker build . --no-cache -t imroc.tencentcloudcr.com/library/nginx:latest -f nginx.Dockerfile
+	docker build . -t imroc.tencentcloudcr.com/library/nginx:latest -f nginx.Dockerfile
